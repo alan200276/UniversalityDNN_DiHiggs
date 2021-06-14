@@ -1,0 +1,51 @@
+#define p = p b b~
+#generate p p > b b~ b b~
+
+
+#output /home/u5/proc_ppbbbb
+
+launch /home/u5/proc_ppbbbb
+
+
+
+shower=OFF
+detector=OFF
+analysis=OFF
+
+set run_card nevents 100000
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+set run_card pdlabel lhapdf 
+set run_card lhaid 260000  #NNPDF30_nlo_as_0118
+
+set run_card ihtmin 1000
+
+
+#set run_card ptj 30.0
+
+#set run_card ptj1min 100 
+#! minimum pt for the leading jet in pt
+#set run_card ptj2min 100 
+#! minimum pt for the second jet in pt
+#set run_card ptj3min 10 
+#! minimum pt for the third jet in pt
+#set run_card ptj4min 10 
+#! minimum pt for the fourth jet in pt
+
+#set run_card  ptj1max 600 
+#! maximum pt for the leading jet in pt 
+#set run_card  ptj2max 500 
+#! maximum pt for the second jet in pt
+#set run_card  ptj3max 300 
+#! maximum pt for the third jet in pt
+#set run_card  ptj4max 300 
+#! maximum pt for the fourth jet in pt
+
+#set run_card ptj 1000.0
+#set run_card ptjmax 2000.0
+
+#set run_card ptj 200.0
+#set run_card ptjmax 600.0
+
+
+
