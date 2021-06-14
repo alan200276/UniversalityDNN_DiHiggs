@@ -1,0 +1,21 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>> Toolkit for HEP Event Generation - ThePEG 2.2.2 <<<<<<<<<<<<<<<<<<<<<<<<<
+>>>> Wed Jun  9 10:18:08 2021                                             <<<<
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>> Herwig 7.2.2 / ThePEG 2.2.2
+
+==============================================================================
+Statistics for Les Houches event handler 'myLesHouchesHandler':
+                                       generated    number of    Cross-section
+                                          events     attempts             (nb)
+==============================================================================
+Total:                                    100000       100010   0.10650(2)e-03
+==============================================================================
+Per Les Houches Reader (and process #) breakdown:
+myReader (all)                            100000       100010   0.10650(2)e-03
+myReader (1)                              100000       100010    0.1065(3)e-03
+==============================================================================
+Warning: Result may be statistically incorrect since
+ the following LesHouchesReaders were oversampled:
+'myReader' (by a factor 20002)
