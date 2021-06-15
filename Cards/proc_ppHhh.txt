@@ -1,7 +1,5 @@
 #import model 2HDMtII_NLO
 
-#generate p p > h1 h1 [QCD]
-
 #generate p p > h2 [QCD]
 
 
