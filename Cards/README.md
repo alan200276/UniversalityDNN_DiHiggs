@@ -39,6 +39,10 @@
     set param_card l3 -10.40733
     set param_card lr7 0
     ```
+    * process card:
+    ```
+    proc_ppHhh.txt
+    ```
 
 
 
@@ -59,4 +63,8 @@
     set run_card lhaid 260000  #NNPDF30_nlo_as_0118
 
     set run_card ihtmin 850
+    ```
+    * process card:
+    ```
+    proc_ppbbbb.txt
     ```
