@@ -9,7 +9,7 @@ rootfilename="ppHhh_pythia_def"
 hepmcfilename="ppHhh_pythia_def"
 
 
-i=2
+i=1
 
 while [ $i != 11 ]
 do

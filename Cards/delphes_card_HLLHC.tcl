@@ -62,6 +62,7 @@ set ExecutionPath {
   FastJetFinder02
   FastJetFinder04
   FastJetFinder08
+  FastJetFinder10
   FastJetFinder15
 
   CaloJetFinder02
@@ -1057,6 +1058,33 @@ module FastJetFinder FastJetFinder08 {
   set JetPTMin 25.0
 }
 
+
+##################
+# Fast Jet finder
+##################
+
+module FastJetFinder FastJetFinder10 {
+  set InputArray EFlowMerger/eflow
+
+  set OutputArray jets
+
+  # algorithm: 1 CDFJetClu, 2 MidPoint, 3 SIScone, 4 kt, 5 Cambridge/Aachen, 6 antikt
+  set JetAlgorithm 6
+  set ParameterR 1.0
+
+  set ComputeNsubjettiness 1
+  set Beta 1.0
+  set AxisMode 4
+
+  set ComputeSoftDrop 1
+  set BetaSoftDrop 0.0
+  set SymmetryCutSoftDrop 0.1
+  set R0SoftDrop 0.8
+
+  set JetPTMin 25.0
+}
+
+
 ##################
 # Fast Jet finder
 ##################
@@ -1660,6 +1688,7 @@ module TreeWriter TreeWriter {
   add Branch FastJetFinder02/jets ParticleFlowJet02 Jet
   add Branch FastJetFinder04/jets ParticleFlowJet04 Jet
   add Branch FastJetFinder08/jets ParticleFlowJet08 Jet
+  add Branch FastJetFinder10/jets ParticleFlowJet10 Jet
   add Branch FastJetFinder15/jets ParticleFlowJet15 Jet
 
   add Branch CaloJetFinder02/jets CaloJet02 Jet

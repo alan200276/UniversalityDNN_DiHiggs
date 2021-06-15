@@ -31,11 +31,11 @@ do
 #    python /root/MG5_aMC_v2_7_3/bin/mg5_aMC $cardpath/ppbbbb.txt > $outpath/ppbbbb_"$i".log
    
    
-#    echo "PP bbbb"
-#    python /root/MG5_aMC_v2_7_3/bin/mg5_aMC $cardpath/proc_ppbbbb.txt > $outpath/proc_ppbbbb_"$i".log
+   echo "PP bbbb"
+   python /root/MG5_aMC_v2_7_3/bin/mg5_aMC $cardpath/proc_ppbbbb.txt > $outpath/proc_ppbbbb_"$i".log
 
-   echo "PP H/A hh"
-   python /root/MG5_aMC_v2_7_3/bin/mg5_aMC $cardpath/proc_ppHhh.txt > $outpath/proc_ppHhh_"$i".log 
+#    echo "PP H/A hh"
+#    python /root/MG5_aMC_v2_7_3/bin/mg5_aMC $cardpath/proc_ppHhh.txt > $outpath/proc_ppHhh_"$i".log 
    
    
    

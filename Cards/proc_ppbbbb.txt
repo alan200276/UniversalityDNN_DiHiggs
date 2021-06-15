@@ -18,7 +18,7 @@ set run_card ebeam2 7000.0
 set run_card pdlabel lhapdf 
 set run_card lhaid 260000  #NNPDF30_nlo_as_0118
 
-set run_card ihtmin 1000
+set run_card ihtmin 850
 
 
 #set run_card ptj 30.0
