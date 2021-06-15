@@ -15,8 +15,11 @@ The following is the procedure for installation and setting.
     * download 2HDMC, unpack and compile  
         `
         wget https://2hdmc.hepforge.org/downloads/2HDMC-1.8.0.tar.gz  
+        
         tar -xvf 2HDMC-1.8.0.tar.gz  
+        
         cd 2HDMC-1.8.0  
+        
         make    
         `
         
