@@ -20,32 +20,3 @@ set run_card lhaid 260000  #NNPDF30_nlo_as_0118
 
 set run_card ihtmin 850
 
-
-#set run_card ptj 30.0
-
-#set run_card ptj1min 100 
-#! minimum pt for the leading jet in pt
-#set run_card ptj2min 100 
-#! minimum pt for the second jet in pt
-#set run_card ptj3min 10 
-#! minimum pt for the third jet in pt
-#set run_card ptj4min 10 
-#! minimum pt for the fourth jet in pt
-
-#set run_card  ptj1max 600 
-#! maximum pt for the leading jet in pt 
-#set run_card  ptj2max 500 
-#! maximum pt for the second jet in pt
-#set run_card  ptj3max 300 
-#! maximum pt for the third jet in pt
-#set run_card  ptj4max 300 
-#! maximum pt for the fourth jet in pt
-
-#set run_card ptj 1000.0
-#set run_card ptjmax 2000.0
-
-#set run_card ptj 200.0
-#set run_card ptjmax 600.0
-
-
-

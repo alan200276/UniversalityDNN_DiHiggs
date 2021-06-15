@@ -37,17 +37,3 @@ set param_card lr7 0
 
 set spinmode none
 decay h2 > h1 h1, h1 > b b~
-
-
-#set param_card tanbeta 1.50
-#set param_card sinbma 0.996
-
-#set run_card scale 350
-#set run_card dsqrt_q2fact1 350
-#set run_card dsqrt_q2fact2 350
-
-#set param_card mh1 125
-#set param_card mh2 700
-#set param_card mh3 701
-#set param_card mhc 670
-
