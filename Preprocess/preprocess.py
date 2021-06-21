@@ -176,7 +176,8 @@ for i in tqdm(range(len(hf_read["GenParticle"]))):
         Higgs_candidate.append(Higgs_candidate_tmp)
 
 
-print("There are {} events.".format(len(event_list_clustered)))
+print("There are {} events (process_list_clustered).".format(len(process_list_clustered)))
+print("There are {} events (Higgs_candidate).".format(len(Higgs_candidate)))
 print("\n")
 ticks_2 = time.time()
 totaltime =  ticks_2 - ticks_1
@@ -250,16 +251,16 @@ features = ["GEN","SHO","PRO",
 untrimmed_jet = []
 trimmed_jet = []
 k = 0
-for N in tqdm(range(len(Higgs_candidate))):
-    if len(Higgs_candidate[N]) >= 2: # at least two jets in this event.
+for N in tqdm(range(len(process_list_clustered))):
+    if len(process_list_clustered[N]) >= 2: # at least two jets in this event.
         var = []
         
         var.append(GEN)
         var.append(SHO)
         var.append(PRO)
         
-        jet_1_untrimmed = Higgs_candidate[N][0] #leading jet's information
-        jet_2_untrimmed = Higgs_candidate[N][1] #subleading jet's information
+        jet_1_untrimmed = process_list_clustered[N][0] #leading jet's information
+        jet_2_untrimmed = process_list_clustered[N][1] #subleading jet's information
         
         var.append(MJJ(jet_1_untrimmed,jet_2_untrimmed))
         var.append(abs(jet_1_untrimmed.eta-jet_2_untrimmed.eta))
@@ -384,95 +385,125 @@ elif index == 1:
 ticks_2 = time.time()
 totaltime =  ticks_2 - ticks_1
 print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
+print("\n")
 
 
-# ###################################################################################
-# print("Make Jet Images")
-# print("\n")    
-# print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
-# ticks_1 = time.time()
 
-# jetimage_list = []
+###################################################################################
+print("Make Leading Jet Images")
+print("\n")    
+print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
+time.sleep(1)
+ticks_1 = time.time()
 
-# for i, jet in enumerate(untrimmed_jet):
+jetimage_list = []
+
+for N in tqdm(range(len(process_list_clustered))):
     
-#     width,height = 32,32
-#     image = np.zeros((width,height))  
-#     isReflection = 1
-#     x_hat = np.array([1,0]) 
-#     y_hat = np.array([0,1])
+    if len(process_list_clustered[N]) < 2: # at least two jets in this event.
+        continue 
+        
+
     
-#     subjets = pyjet.cluster(jet.constituents_array(), R=0.2, p=1)
-#     subjet_array = subjets.inclusive_jets()
+    jet = process_list_clustered[N][0] #leading jet's information
+    
+
+    width,height = 40,40
+    image_0 = np.zeros((width,height)) #Charged pt 
+    image_1 = np.zeros((width,height)) #Neutral pt
+    image_2 = np.zeros((width,height)) #Charged multiplicity
+    isReflection = 1
+    x_hat = np.array([1,0]) 
+    y_hat = np.array([0,1])
+    
+    subjets = pyjet.cluster(jet.constituents_array(), R=0.2, p=1)
+    subjet_array = subjets.inclusive_jets()
     
         
-#     if len(subjet_array) > 1:
-#             #First, let's find the direction of the second-hardest jet relative to the first-hardest jet
+    if len(subjet_array) > 1:
+            #First, let's find the direction of the second-hardest jet relative to the first-hardest jet
 #             phi_dir = -(dphi(subjet_array[1].phi,subjet_array[0].phi))
 #             eta_dir = -(subjet_array[1].eta - subjet_array[0].eta)
-#             #Norm difference:
-#             norm_dir = np.linalg.norm([phi_dir,eta_dir])
-#             #This is now the y-hat direction. so we can actually find the unit vector:
-#             y_hat = np.divide([phi_dir,eta_dir],np.linalg.norm([phi_dir,eta_dir]))
-#             #and we can find the x_hat direction as well
-#             x_hat = np.array([y_hat[1],-y_hat[0]]) 
+            phi_dir = -(dphi(subjet_array[1].phi,jet.phi))
+            eta_dir = -(subjet_array[1].eta - jet.eta)
+            #Norm difference:
+            norm_dir = np.linalg.norm([phi_dir,eta_dir])
+            #This is now the y-hat direction. so we can actually find the unit vector:
+            y_hat = np.divide([phi_dir,eta_dir],np.linalg.norm([phi_dir,eta_dir]))
+            #and we can find the x_hat direction as well
+            x_hat = np.array([y_hat[1],-y_hat[0]]) 
     
-#     if len(subjet_array) > 2:
+    if len(subjet_array) > 2:
 #         phi_dir_3 = -(dphi(subjet_array[2].phi,subjet_array[0].phi))
 #         eta_dir_3 = -(subjet_array[2].eta - subjet_array[0].eta)
+        phi_dir_3 = -(dphi(subjet_array[2].phi,jet.phi))
+        eta_dir_3 = -(subjet_array[2].eta - jet.eta)
 
-#         isReflection = np.cross(np.array([phi_dir,eta_dir,0]),np.array([phi_dir_3,eta_dir_3,0]))[2]
+        isReflection = np.cross(np.array([phi_dir,eta_dir,0]),np.array([phi_dir_3,eta_dir_3,0]))[2]
         
-            
 
-#     R = 0.8
-#     for constituent in jet:
-#         if (len(subjet_array) == 1):
-#             #In the case that the reclustering only found one hard jet (that seems kind of bad, but hey)
-#             #no_two = no_two+1
+    R = 1.0
+    for constituent in jet:
+        
+#         new_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+#         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2, math.floor(height*(new_coord[1])/(R*1.5))+height//2]
+
+
+        if (len(subjet_array) == 1):
+            #In the case that the reclustering only found one hard jet (that seems kind of bad, but hey)
+            #no_two = no_two+1
 #             new_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
-#             indxs = [math.floor(width*new_coord[0]/R)+width//2,math.floor(height*(new_coord[1])/(R*1.5))+height//2]
+            new_coord = [dphi(constituent.phi, jet.phi),constituent.eta-jet.eta]
+            indxs = [math.floor(width*new_coord[0]/(R*1))+width//2, math.floor(height*(new_coord[1])/(R*1))+height//2]
             
-#         else:
-#             #Now, we want to express an incoming particle in this new basis:
+        else:
+            #Now, we want to express an incoming particle in this new basis:
 #             part_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
-#             new_coord = np.dot(np.array([x_hat,y_hat]),part_coord)
+            part_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+            new_coord = np.dot(np.array([x_hat,y_hat]),part_coord)
             
-#             #put third-leading subjet on the right-hand side
-#             if isReflection < 0: 
-#                 new_coord = [-new_coord[0],new_coord[1]]
-#             elif isReflection > 0:
-#                 new_coord = [new_coord[0],new_coord[1]]
-#             #Now, we want to cast these new coordinates into our array
-#             #(row,column)
-#     #         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*(new_coord[1]+norm_dir/1.5)/(R*1.5))+height//2]
-#     #         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*new_coord[1]/(R*1.5))+height//2] #(phi,eta) and the leading subjet at the origin
-# #             indxs = [math.floor(height*new_coord[1]/(R*1.5))+height//2,math.floor(width*new_coord[0]/(R*1.5))+width//2] #(eta,phi) and the leading subjet at the origin
-#             indxs = [math.floor(height*new_coord[1]/R)+height//2,math.floor(width*new_coord[0]/R)+width//2] #(eta,phi) and the leading subjet at the origin
+            #put third-leading subjet on the right-hand side
+            if isReflection < 0: 
+                new_coord = [-new_coord[0],new_coord[1]]
+            elif isReflection > 0:
+                new_coord = [new_coord[0],new_coord[1]]
+            #Now, we want to cast these new coordinates into our array
+            #(row,column)
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*(new_coord[1]+norm_dir/1.5)/(R*1.5))+height//2]
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*new_coord[1]/(R*1.5))+height//2] #(phi,eta) and the leading subjet at the origin
+#             indxs = [math.floor(height*new_coord[1]/(R*1.5))+height//2,math.floor(width*new_coord[0]/(R*1.5))+width//2] #(eta,phi) and the leading subjet at the origin
+            indxs = [math.floor(height*new_coord[1]/(R*1))+height//2,math.floor(width*new_coord[0]/(R*1))+width//2] #(eta,phi) and the leading subjet at the origin
 
+        if indxs[0] >= width or indxs[1] >= height or indxs[0] <= 0 or indxs[1] <= 0:
+            continue
+            
+        phi_index = int(indxs[0]); eta_index = int(indxs[1])
 
-#         if indxs[0] >= width or indxs[1] >= height or indxs[0] <= 0 or indxs[1] <= 0:
-#             continue
-#         phi_index = int(indxs[0]); eta_index = int(indxs[1])
+        #finally, let's fill
+        if constituent.Charge != 0:
+            image_0[phi_index,eta_index] = image_0[phi_index,eta_index] + constituent.pt
+            image_2[phi_index,eta_index] = image_2[phi_index,eta_index] + 1
 
-#         #finally, lets fill
+        elif constituent.Charge == 0:
+            image_1[phi_index,eta_index] = image_1[phi_index,eta_index] + constituent.pt
 
-#         image[phi_index,eta_index] = image[phi_index,eta_index] + constituent.e/np.cosh(constituent.eta)
-# #         image[phi_index,eta_index] = image[phi_index,eta_index] + constituent.pt
-
-#     image = np.divide(image,np.sqrt(np.sum(image*image)))
-
-#     jetimage_list.append(image)
+            
+    image_0 = np.divide(image_0,np.sum(image_0)) #Charged pt 
+    image_1 = np.divide(image_1,np.sum(image_1)) #Neutral pt 
+    image_2 = np.divide(image_2,np.sum(image_2)) #Charged multiplicity
+    jetimage_list.append(np.array([image_0,image_1,image_2]))
     
-# jetimage_list = np.array(jetimage_list)
+    
+jetimage_list = np.array(jetimage_list)
 
 
-# print("There are {} jet images.".format(len(jetimage_list)))
+print("There are {} jet images.".format(len(jetimage_list)))
+print("\n")
+np.savez(imagespath +str(PRO)+"_"+str(GEN)+"_"+str(SHO)+"_"+str(file_number)+"_untrimmed.npz", jetimage_list)
 
-# np.savez(imagespath +str(PRO)+"_"+str(GEN)+"_"+str(SHO)+"_"+str(file_number)+"_untrimmed.npz", jetimage_list)
+ticks_2 = time.time()
+totaltime =  ticks_2 - ticks_1
+print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
 
-# ticks_2 = time.time()
-# totaltime =  ticks_2 - ticks_1
-# print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
 
 
