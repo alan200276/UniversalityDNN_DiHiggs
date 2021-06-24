@@ -15,16 +15,16 @@ echo "Start Running"
 date +"%Y %b %m"
 
 
-i=2
-while [ $i != 3 ]
+i=1
+while [ $i != 11 ]
 do 
 
-    echo "H $PROCESS"
-    nohup python3 $HOMEPATH/Preprocess/downsize.py $datapath/ppHhh_"$process"_"$i".root $i "$datapath" > $HOMEPATH/$outpath_H/downsize_ppHhh_"$process"_"$i".log &
+#     echo "H $PROCESS"
+#     nohup python3 $HOMEPATH/Preprocess/downsize.py $datapath/ppHhh_"$process"_"$i".root $i "$datapath" > $HOMEPATH/$outpath_H/downsize_ppHhh_"$process"_"$i".log &
     
-#     echo "QCD $PROCESS"
-#     nohup python3 $HOMEPATH/Preprocess/downsize.py $datapath/ppbbbb_"$process"_"$i".root $i $datapath > $HOMEPATH/$outpath_QCD/downsize_ppbbbb_"$process"_"$i".log &
-
+    echo "QCD $PROCESS"
+    nohup python3 $HOMEPATH/Preprocess/downsize.py $datapath/ppbbbb_"$process"_"$i".root $i $datapath > $HOMEPATH/$outpath_QCD/downsize_ppbbbb_"$process"_"$i".log &
+    
     date +"%Y %b %m"
     date +"%r"
     i=$(($i+1))

@@ -16,12 +16,12 @@ date +"%Y %b %m"
 
 
 i=1
-while [ $i != 2 ]
+while [ $i != 11 ]
 do 
 
-    nohup python3 $HOMEPATH/Preprocess/preprocess.py $datapath/EventList_H_pythia_def_"$i".h5 0 $i > $HOMEPATH/$outpath_H/preprocess_ppHhh_"$process"_"$i".log  &
+    nohup python3 $HOMEPATH/Preprocess/preprocess_dev.py $datapath/EventList_H_pythia_def_"$i".h5 0 $i > $HOMEPATH/$outpath_H/preprocess_ppHhh_"$process"_"$i".log  &
     
-#     nohup python3 $HOMEPATH/Preprocess/preprocess.py $datapath/EventList_QCD_pythia_def_"$i".h5 0 $i > $HOMEPATH/$outpath_QCD/preprocess_ppbbbb_"$process"_"$i".log  &
+    nohup python3 $HOMEPATH/Preprocess/preprocess_dev.py $datapath/EventList_QCD_pythia_def_"$i".h5 0 $i > $HOMEPATH/$outpath_QCD/preprocess_ppbbbb_"$process"_"$i".log  &
     
 
     date +"%Y %b %m"
