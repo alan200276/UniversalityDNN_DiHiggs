@@ -43,6 +43,18 @@ def MJJ(j1,j2):
     
     return np.sqrt((e1+e2)**2-(px1+px2)**2-(py1+py2)**2-(pz1+pz2)**2)
 
+
+def ET(jet):
+    pt = jet.pt
+    m = jet.mass
+    ET = np.sqrt(m**2 + pt**2)
+    return  ET
+
+def XHH(jet1, jet2):
+    m1, m2 = jet1.mass, jet2.mass
+    XHH = np.sqrt( (m1-124)**2/(0.1*(m1+1e-5)) + (m2-115)**2/(0.1*(m2+1e-5)))
+    return  XHH
+
 ###################################################################################
 """
 Input Check and Setting
@@ -138,8 +150,10 @@ print("\n")
 hf_read = h5py.File(data_path, 'r')
 
 process_list_clustered = []
-Higgs_candidate = []
-two_B_tag = []
+
+four_b_tag, Higgs_candidate_4b = [], []
+three_b_tag, Higgs_candidate_3b = [], []
+two_b_tag, Higgs_candidate_2b = [], []
 
 print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
 time.sleep(1)
@@ -161,27 +175,100 @@ for i in tqdm(range(len(hf_read["GenParticle"]))):
     jets_cluster = sequence_cluster.inclusive_jets(pt_min)
     process_list_clustered.append(jets_cluster)
 
+
     """
-    Find two-B-hadron-tag jet (Higgs candidate)
+    4b category: have two b-tagged jets associated with each $H$ candidate
     """
     Higgs_candidate_tmp = []
-    for jet in jets_cluster:
+    if len(jets_cluster) >=2:
+        for jet in jets_cluster[:2]:
+            B_tag = 0
+            for constituent in jet:
+                if constituent.B_tag == 1:
+                    B_tag += 1
+            if B_tag >= 2:
+                Higgs_candidate_tmp.append(jet)
+
+    if len(Higgs_candidate_tmp) >= 2:
+        Higgs_candidate_4b.append(Higgs_candidate_tmp)
+        four_b_tag.append(1)
+
+    else:
+        four_b_tag.append(0)
+
+
+    """
+    3b category: have two $b$-tagged jets associated with one $H$ candidate 
+    and exactly one $b$-tagged jet associated with the other $H$ candidate.
+    """
+    Higgs_candidate_tmp_2b, Higgs_candidate_tmp_1b = [], []
+    if len(jets_cluster) >=2:
         B_tag = 0
-        for constituent in jet:
+        for constituent in jets_cluster[0]:
             if constituent.B_tag == 1:
                 B_tag += 1
         if B_tag >= 2:
-            Higgs_candidate_tmp.append(jet)
+            Higgs_candidate_tmp_2b.append(jets_cluster[0])
+
+        B_tag = 0
+        for constituent in jets_cluster[1]:
+            if constituent.B_tag == 1:
+                B_tag += 1
+        if B_tag >= 2:
+            Higgs_candidate_tmp_2b.append(jets_cluster[1])
+
+        B_tag = 0
+        for constituent in jets_cluster[0]:
+            if constituent.B_tag == 1:
+                B_tag += 1
+        if B_tag == 1:
+            Higgs_candidate_tmp_1b.append(jets_cluster[0])
+
+        B_tag = 0  
+        for constituent in jets_cluster[1]:
+            if constituent.B_tag == 1:
+                B_tag += 1
+        if B_tag == 1:
+            Higgs_candidate_tmp_1b.append(jets_cluster[1])
+
+
+    if len(Higgs_candidate_tmp_2b) == 1 and len(Higgs_candidate_tmp_1b) == 1:
+        Higgs_candidate_3b.append([Higgs_candidate_tmp_2b[0],Higgs_candidate_tmp_1b[0]])
+        three_b_tag.append(1)
+
+    else:
+        three_b_tag.append(0)
+
+
+    """
+    2b category: have exactly one $b$-tagged jet associated with each $H$ candidate
+    """
+    Higgs_candidate_tmp = []
+    if len(jets_cluster) >=2:
+        for jet in jets_cluster[:2]:
+            B_tag = 0
+            for constituent in jet:
+                if constituent.B_tag == 1:
+                    B_tag += 1
+            if B_tag == 1:
+                Higgs_candidate_tmp.append(jet)
 
     if len(Higgs_candidate_tmp) >= 2:
-        Higgs_candidate.append(Higgs_candidate_tmp)
-        two_B_tag.append(1)
-    else:
-        two_B_tag.append(0)
+        Higgs_candidate_2b.append(Higgs_candidate_tmp)
+        two_b_tag.append(1)
 
+    else:
+        two_b_tag.append(0)
+
+        
+#     if i == 10:
+#         break
 
 print("There are {} events (process_list_clustered).".format(len(process_list_clustered)))
-print("There are {} events (Higgs_candidate).".format(len(Higgs_candidate)))
+print("There are {} events (4b Higgs_candidate).".format(len(Higgs_candidate_4b)))
+print("There are {} events (3b Higgs_candidate).".format(len(Higgs_candidate_3b)))
+print("There are {} events (2b Higgs_candidate).".format(len(Higgs_candidate_2b)))
+
 print("\n")
 ticks_2 = time.time()
 totaltime =  ticks_2 - ticks_1
@@ -243,13 +330,17 @@ time.sleep(1)
 ticks_1 = time.time()
     
 features = ["GEN","SHO","PRO",
-            "MJJ_0","delta_eta_0",
-            "MJ1_0","PTJ1_0","t211_0","D211_0","D221_0","C211_0","C221_0",
-            "MJ2_0","PTJ2_0","t212_0","D212_0","D222_0","C212_0","C222_0",
-            "MJJ","delta_eta",
-            "MJ1","PTJ1","t211","D211","D221","C211","C221",
-            "MJ2","PTJ2","t212","D212","D222","C212","C222",
-            "two_B_tag",
+            "MJJ_0","delta_eta_0","XHH_0",
+            "MJ1_0","PTJ1_0","eta1_0","phi1_0",
+            "t211_0","D211_0","D221_0","C211_0","C221_0",
+            "MJ2_0","PTJ2_0","eta2_0","phi2_0",
+            "t212_0","D212_0","D222_0","C212_0","C222_0",
+            "MJJ","delta_eta","XHH",
+            "MJ1","PTJ1","eta1","phi1",
+            "t211","D211","D221","C211","C221",
+            "MJ2","PTJ2","eta2","phi2",
+            "t212","D212","D222","C212","C222",
+            "four_b_tag","three_b_tag","two_b_tag",
             "eventindex"
            ]
 
@@ -257,123 +348,173 @@ untrimmed_jet = []
 trimmed_jet = []
 k = 0
 for N in tqdm(range(len(process_list_clustered))):
-    if len(process_list_clustered[N]) >= 2: # at least two jets in this event.
-        var = []
+    
+#     """
+#     Trigger
+#     """
+#     if ET(process_list_clustered[N][0]) < 420 or process_list_clustered[N][0].mass < 35:
+#         continue
         
-        var.append(GEN)
-        var.append(SHO)
-        var.append(PRO)
-        
-        jet_1_untrimmed = process_list_clustered[N][0] #leading jet's information
-        jet_2_untrimmed = process_list_clustered[N][1] #subleading jet's information
-        
-        var.append(MJJ(jet_1_untrimmed,jet_2_untrimmed))
-        var.append(abs(jet_1_untrimmed.eta-jet_2_untrimmed.eta))
+    """
+    >= 2 jets
+    """
+    if len(process_list_clustered[N]) < 2:
+        continue
 
-#         if jet_1_untrimmed.pt < 300 or jet_1_untrimmed.pt > 500: 
-#             continue
+    jet_1_untrimmed = process_list_clustered[N][0] #leading jet's information
+    jet_2_untrimmed = process_list_clustered[N][1] #subleading jet's information
+    
+#     """
+#     Basic Selection
+#     """
 
-        t1 = JSS.tn(jet_1_untrimmed, n=1)
-        t2 = JSS.tn(jet_1_untrimmed, n=2)
-        t21_untrimmed = t2 / t1 if t1 > 0.0 else 0.0
+#     if (jet_1_untrimmed.pt < 450) or (jet_2_untrimmed.pt < 250) :
+#         continue
 
-        ee2 = JSS.CalcEECorr(jet_1_untrimmed, n=2, beta=1.0)
-        ee3 = JSS.CalcEECorr(jet_1_untrimmed, n=3, beta=1.0)
-        d21_untrimmed = ee3/(ee2**3) if ee2>0 else 0
-        d22_untrimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
-        c21_untrimmed = ee3/(ee2**2) if ee2>0 else 0
-        c22_untrimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
+#     if (abs(jet_1_untrimmed.eta) >= 2) or (jet_1_untrimmed.mass <= 50) :
+#         continue
 
-        var.append(jet_1_untrimmed.mass)
-        var.append(jet_1_untrimmed.pt)
-        var.append(t21_untrimmed)
-        var.append(d21_untrimmed)
-        var.append(d22_untrimmed)
-        var.append(c21_untrimmed)
-        var.append(c22_untrimmed)
-        
-
-
-        t1 = JSS.tn(jet_2_untrimmed, n=1)
-        t2 = JSS.tn(jet_2_untrimmed, n=2)
-        t21_untrimmed = t2 / t1 if t1 > 0.0 else 0.0
-
-        ee2 = JSS.CalcEECorr(jet_2_untrimmed, n=2, beta=1.0)
-        ee3 = JSS.CalcEECorr(jet_2_untrimmed, n=3, beta=1.0)
-        d21_untrimmed = ee3/(ee2**3) if ee2>0 else 0
-        d22_untrimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
-        c21_untrimmed = ee3/(ee2**2) if ee2>0 else 0
-        c22_untrimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
-
-        var.append(jet_2_untrimmed.mass)
-        var.append(jet_2_untrimmed.pt)
-        var.append(t21_untrimmed)
-        var.append(d21_untrimmed)
-        var.append(d22_untrimmed)
-        var.append(c21_untrimmed)
-        var.append(c22_untrimmed)
-
-
-
-        ## Jet Trimming
-        jet_1_trimmed = jet_trimming.jet_trim(jet_1_untrimmed)[0]   #trimming jet's information
-        jet_2_trimmed = jet_trimming.jet_trim(jet_2_untrimmed)[0]   #trimming jet's information
-
-        
-        var.append(MJJ(jet_1_trimmed,jet_2_trimmed))
-        var.append(abs(jet_1_trimmed.eta-jet_2_trimmed.eta))
+#     if (abs(jet_2_untrimmed.eta) >= 2) or (jet_2_untrimmed.mass <= 50) :
+#         continue
         
         
-#         if jet_1_trimmed.pt < 300 or jet_1_trimmed.pt > 500: 
-#             continue
-
-
-        t1 = JSS.tn(jet_1_trimmed, n=1)
-        t2 = JSS.tn(jet_1_trimmed, n=2)
-        t21_trimmed = t2 / t1 if t1 > 0.0 else 0.0
-
-        ee2 = JSS.CalcEECorr(jet_1_trimmed, n=2, beta=1.0)
-        ee3 = JSS.CalcEECorr(jet_1_trimmed, n=3, beta=1.0)
-        d21_trimmed = ee3/(ee2**3) if ee2>0 else 0
-        d22_trimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
-        c21_trimmed = ee3/(ee2**2) if ee2>0 else 0
-        c22_trimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
-
-        var.append(jet_1_trimmed.mass)
-        var.append(jet_1_trimmed.pt)
-        var.append(t21_trimmed)
-        var.append(d21_trimmed)
-        var.append(d22_trimmed)
-        var.append(c21_trimmed)
-        var.append(c22_trimmed)
-
-
-        t1 = JSS.tn(jet_2_trimmed, n=1)
-        t2 = JSS.tn(jet_2_trimmed, n=2)
-        t21_trimmed = t2 / t1 if t1 > 0.0 else 0.0
-
-        ee2 = JSS.CalcEECorr(jet_2_trimmed, n=2, beta=1.0)
-        ee3 = JSS.CalcEECorr(jet_2_trimmed, n=3, beta=1.0)
-        d21_trimmed = ee3/(ee2**3) if ee2>0 else 0
-        d22_trimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
-        c21_trimmed = ee3/(ee2**2) if ee2>0 else 0
-        c22_trimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
-
-        var.append(jet_2_trimmed.mass)
-        var.append(jet_2_trimmed.pt)
-        var.append(t21_trimmed)
-        var.append(d21_trimmed)
-        var.append(d22_trimmed)
-        var.append(c21_trimmed)
-        var.append(c22_trimmed)
+#     """
+#     |\Delta\eta| < 1.3
+#     """        
+#     if (abs(jet_1_untrimmed.eta - jet_2_untrimmed.eta) > 1.3) :
+#         continue
         
-        var.append(two_B_tag[N])
-        var.append(k)
+#     """
+#     M(jj) > 700 GeV 
+#     """    
+#     if MJJ(jet_1_untrimmed,jet_2_untrimmed) < 700:
+#         continue
 
-        dataframe_tmp = pd.DataFrame([var],columns=features)
-        dataframe = dataframe.append(dataframe_tmp, ignore_index = True)
+        
+    var = []
 
-        k += 1
+    var.append(GEN)
+    var.append(SHO)
+    var.append(PRO)
+
+    var.append(MJJ(jet_1_untrimmed,jet_2_untrimmed))
+    var.append(abs(jet_1_untrimmed.eta-jet_2_untrimmed.eta))
+    var.append(XHH(jet_1_untrimmed,jet_2_untrimmed))
+    
+   
+
+
+    t1 = JSS.tn(jet_1_untrimmed, n=1)
+    t2 = JSS.tn(jet_1_untrimmed, n=2)
+    t21_untrimmed = t2 / t1 if t1 > 0.0 else 0.0
+
+    ee2 = JSS.CalcEECorr(jet_1_untrimmed, n=2, beta=1.0)
+    ee3 = JSS.CalcEECorr(jet_1_untrimmed, n=3, beta=1.0)
+    d21_untrimmed = ee3/(ee2**3) if ee2>0 else 0
+    d22_untrimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
+    c21_untrimmed = ee3/(ee2**2) if ee2>0 else 0
+    c22_untrimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
+
+    var.append(jet_1_untrimmed.mass)
+    var.append(jet_1_untrimmed.pt)
+    var.append(jet_1_untrimmed.eta)
+    var.append(jet_1_untrimmed.phi)
+    var.append(t21_untrimmed)
+    var.append(d21_untrimmed)
+    var.append(d22_untrimmed)
+    var.append(c21_untrimmed)
+    var.append(c22_untrimmed)
+
+
+
+    t1 = JSS.tn(jet_2_untrimmed, n=1)
+    t2 = JSS.tn(jet_2_untrimmed, n=2)
+    t21_untrimmed = t2 / t1 if t1 > 0.0 else 0.0
+
+    ee2 = JSS.CalcEECorr(jet_2_untrimmed, n=2, beta=1.0)
+    ee3 = JSS.CalcEECorr(jet_2_untrimmed, n=3, beta=1.0)
+    d21_untrimmed = ee3/(ee2**3) if ee2>0 else 0
+    d22_untrimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
+    c21_untrimmed = ee3/(ee2**2) if ee2>0 else 0
+    c22_untrimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
+
+    var.append(jet_2_untrimmed.mass)
+    var.append(jet_2_untrimmed.pt)
+    var.append(jet_2_untrimmed.eta)
+    var.append(jet_2_untrimmed.phi)
+    var.append(t21_untrimmed)
+    var.append(d21_untrimmed)
+    var.append(d22_untrimmed)
+    var.append(c21_untrimmed)
+    var.append(c22_untrimmed)
+
+
+
+    """
+    Jet Trimming
+    """
+    jet_1_trimmed = jet_trimming.jet_trim(jet_1_untrimmed)[0]   #trimming jet's information
+    jet_2_trimmed = jet_trimming.jet_trim(jet_2_untrimmed)[0]   #trimming jet's information
+
+
+    var.append(MJJ(jet_1_trimmed,jet_2_trimmed))
+    var.append(abs(jet_1_trimmed.eta-jet_2_trimmed.eta))
+    var.append(XHH(jet_1_trimmed,jet_2_trimmed))
+
+    t1 = JSS.tn(jet_1_trimmed, n=1)
+    t2 = JSS.tn(jet_1_trimmed, n=2)
+    t21_trimmed = t2 / t1 if t1 > 0.0 else 0.0
+
+    ee2 = JSS.CalcEECorr(jet_1_trimmed, n=2, beta=1.0)
+    ee3 = JSS.CalcEECorr(jet_1_trimmed, n=3, beta=1.0)
+    d21_trimmed = ee3/(ee2**3) if ee2>0 else 0
+    d22_trimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
+    c21_trimmed = ee3/(ee2**2) if ee2>0 else 0
+    c22_trimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
+
+    var.append(jet_1_trimmed.mass)
+    var.append(jet_1_trimmed.pt)
+    var.append(jet_1_trimmed.eta)
+    var.append(jet_1_trimmed.phi)
+    var.append(t21_trimmed)
+    var.append(d21_trimmed)
+    var.append(d22_trimmed)
+    var.append(c21_trimmed)
+    var.append(c22_trimmed)
+
+
+    t1 = JSS.tn(jet_2_trimmed, n=1)
+    t2 = JSS.tn(jet_2_trimmed, n=2)
+    t21_trimmed = t2 / t1 if t1 > 0.0 else 0.0
+
+    ee2 = JSS.CalcEECorr(jet_2_trimmed, n=2, beta=1.0)
+    ee3 = JSS.CalcEECorr(jet_2_trimmed, n=3, beta=1.0)
+    d21_trimmed = ee3/(ee2**3) if ee2>0 else 0
+    d22_trimmed = ee3**2/((ee2**2)**3) if ee2>0 else 0
+    c21_trimmed = ee3/(ee2**2) if ee2>0 else 0
+    c22_trimmed = ee3**2/((ee2**2)**2) if ee2>0 else 0 
+
+    var.append(jet_2_trimmed.mass)
+    var.append(jet_2_trimmed.pt)
+    var.append(jet_2_trimmed.eta)
+    var.append(jet_2_trimmed.phi)
+    var.append(t21_trimmed)
+    var.append(d21_trimmed)
+    var.append(d22_trimmed)
+    var.append(c21_trimmed)
+    var.append(c22_trimmed)
+
+    var.append(four_b_tag[N])
+    var.append(three_b_tag[N])
+    var.append(two_b_tag[N])
+    
+    
+    var.append(k)
+
+    dataframe_tmp = pd.DataFrame([var],columns=features)
+    dataframe = dataframe.append(dataframe_tmp, ignore_index = True)
+
+    k += 1
 
 #         if k >= 10000:
 #             break
@@ -394,122 +535,319 @@ print("\n")
 
 
 
-# ###################################################################################
-# print("Make Leading Jet Images")
-# print("\n")    
-# print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
-# time.sleep(1)
-# ticks_1 = time.time()
+###################################################################################
+print("Make Leading Jet Images")
+print("\n")    
+print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
+time.sleep(1)
+ticks_1 = time.time()
 
-# jetimage_list = []
+jetimage_list = []
 
-# for N in tqdm(range(len(process_list_clustered))):
+for N in tqdm(range(len(process_list_clustered))):
     
-#     if len(process_list_clustered[N]) < 2: # at least two jets in this event.
-#         continue 
+#     """
+#     Trigger
+#     """
+#     if ET(process_list_clustered[N][0]) < 420 or process_list_clustered[N][0].mass < 35:
+#         continue
+        
+    """
+    >= 2 jets
+    """
+    if len(process_list_clustered[N]) < 2: # at least two jets in this event.
+        continue
+
+    jet_1_untrimmed = process_list_clustered[N][0] #leading jet's information
+    jet_2_untrimmed = process_list_clustered[N][1] #subleading jet's information
+    
+#     """
+#     Basic Selection
+#     """
+
+#     if (jet_1_untrimmed.pt < 450) or (jet_2_untrimmed.pt < 250) :
+#         continue
+
+#     if (abs(jet_1_untrimmed.eta) >= 2) or (jet_1_untrimmed.mass <= 50) :
+#         continue
+
+#     if (abs(jet_2_untrimmed.eta) >= 2) or (jet_2_untrimmed.mass <= 50) :
+#         continue
+
+
+#     """
+#     |\Delta\eta| < 1.3
+#     """        
+#     if (abs(jet_1_untrimmed.eta - jet_2_untrimmed.eta) > 1.3) :
+#         continue
+        
+#     """
+#     M(jj) > 700 GeV 
+#     """    
+#     if MJJ(jet_1_untrimmed,jet_2_untrimmed) < 700:
+#         continue
+        
         
 
-    
 #     jet = process_list_clustered[N][0] #leading jet's information
+    jet = jet_1_untrimmed
     
 
-#     width,height = 40,40
-#     image_0 = np.zeros((width,height)) #Charged pt 
-#     image_1 = np.zeros((width,height)) #Neutral pt
-#     image_2 = np.zeros((width,height)) #Charged multiplicity
-#     isReflection = 1
-#     x_hat = np.array([1,0]) 
-#     y_hat = np.array([0,1])
+    width,height = 40,40
+    image_0 = np.zeros((width,height)) #Charged pt 
+    image_1 = np.zeros((width,height)) #Neutral pt
+    image_2 = np.zeros((width,height)) #Charged multiplicity
+    isReflection = 1
+    x_hat = np.array([1,0]) 
+    y_hat = np.array([0,1])
     
-#     subjets = pyjet.cluster(jet.constituents_array(), R=0.2, p=1)
-#     subjet_array = subjets.inclusive_jets()
+    subjets = pyjet.cluster(jet.constituents_array(), R=0.2, p=-1)
+    subjet_array = subjets.inclusive_jets()
     
         
-#     if len(subjet_array) > 1:
-#             #First, let's find the direction of the second-hardest jet relative to the first-hardest jet
-# #             phi_dir = -(dphi(subjet_array[1].phi,subjet_array[0].phi))
-# #             eta_dir = -(subjet_array[1].eta - subjet_array[0].eta)
-#             phi_dir = -(dphi(subjet_array[1].phi,jet.phi))
-#             eta_dir = -(subjet_array[1].eta - jet.eta)
-#             #Norm difference:
-#             norm_dir = np.linalg.norm([phi_dir,eta_dir])
-#             #This is now the y-hat direction. so we can actually find the unit vector:
-#             y_hat = np.divide([phi_dir,eta_dir],np.linalg.norm([phi_dir,eta_dir]))
-#             #and we can find the x_hat direction as well
-#             x_hat = np.array([y_hat[1],-y_hat[0]]) 
+    if len(subjet_array) > 1:
+            #First, let's find the direction of the second-hardest jet relative to the first-hardest jet
+#             phi_dir = -(dphi(subjet_array[1].phi,subjet_array[0].phi))
+#             eta_dir = -(subjet_array[1].eta - subjet_array[0].eta)
+            phi_dir = -(dphi(subjet_array[1].phi,jet.phi))
+            eta_dir = -(subjet_array[1].eta - jet.eta)
+            #Norm difference:
+            norm_dir = np.linalg.norm([phi_dir,eta_dir])
+            #This is now the y-hat direction. so we can actually find the unit vector:
+            y_hat = np.divide([phi_dir,eta_dir],np.linalg.norm([phi_dir,eta_dir]))
+            #and we can find the x_hat direction as well
+            x_hat = np.array([y_hat[1],-y_hat[0]]) 
     
-#     if len(subjet_array) > 2:
-# #         phi_dir_3 = -(dphi(subjet_array[2].phi,subjet_array[0].phi))
-# #         eta_dir_3 = -(subjet_array[2].eta - subjet_array[0].eta)
-#         phi_dir_3 = -(dphi(subjet_array[2].phi,jet.phi))
-#         eta_dir_3 = -(subjet_array[2].eta - jet.eta)
+    if len(subjet_array) > 2:
+#         phi_dir_3 = -(dphi(subjet_array[2].phi,subjet_array[0].phi))
+#         eta_dir_3 = -(subjet_array[2].eta - subjet_array[0].eta)
+        phi_dir_3 = -(dphi(subjet_array[2].phi,jet.phi))
+        eta_dir_3 = -(subjet_array[2].eta - jet.eta)
 
-#         isReflection = np.cross(np.array([phi_dir,eta_dir,0]),np.array([phi_dir_3,eta_dir_3,0]))[2]
+        isReflection = np.cross(np.array([phi_dir,eta_dir,0]),np.array([phi_dir_3,eta_dir_3,0]))[2]
         
 
-#     R = 1.0
-#     for constituent in jet:
+    R = 1.0
+    for constituent in jet:
         
-# #         new_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
-# #         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2, math.floor(height*(new_coord[1])/(R*1.5))+height//2]
+#         new_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+#         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2, math.floor(height*(new_coord[1])/(R*1.5))+height//2]
 
 
-#         if (len(subjet_array) == 1):
-#             #In the case that the reclustering only found one hard jet (that seems kind of bad, but hey)
-#             #no_two = no_two+1
-# #             new_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
-#             new_coord = [dphi(constituent.phi, jet.phi),constituent.eta-jet.eta]
-#             indxs = [math.floor(width*new_coord[0]/(R*1))+width//2, math.floor(height*(new_coord[1])/(R*1))+height//2]
+        if (len(subjet_array) == 1):
+            #In the case that the reclustering only found one hard jet (that seems kind of bad, but hey)
+            #no_two = no_two+1
+#             new_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
+            new_coord = [dphi(constituent.phi, jet.phi),constituent.eta-jet.eta]
+            indxs = [math.floor(width*new_coord[0]/(R*1))+width//2, math.floor(height*(new_coord[1])/(R*1))+height//2]
             
-#         else:
-#             #Now, we want to express an incoming particle in this new basis:
-# #             part_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
-#             part_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
-#             new_coord = np.dot(np.array([x_hat,y_hat]),part_coord)
+        else:
+            #Now, we want to express an incoming particle in this new basis:
+#             part_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
+            part_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+            new_coord = np.dot(np.array([x_hat,y_hat]),part_coord)
             
-#             #put third-leading subjet on the right-hand side
-#             if isReflection < 0: 
-#                 new_coord = [-new_coord[0],new_coord[1]]
-#             elif isReflection > 0:
-#                 new_coord = [new_coord[0],new_coord[1]]
-#             #Now, we want to cast these new coordinates into our array
-#             #(row,column)
-# #             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*(new_coord[1]+norm_dir/1.5)/(R*1.5))+height//2]
-# #             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*new_coord[1]/(R*1.5))+height//2] #(phi,eta) and the leading subjet at the origin
-# #             indxs = [math.floor(height*new_coord[1]/(R*1.5))+height//2,math.floor(width*new_coord[0]/(R*1.5))+width//2] #(eta,phi) and the leading subjet at the origin
-#             indxs = [math.floor(height*new_coord[1]/(R*1))+height//2,math.floor(width*new_coord[0]/(R*1))+width//2] #(eta,phi) and the leading subjet at the origin
+            #put third-leading subjet on the right-hand side
+            if isReflection < 0: 
+                new_coord = [-new_coord[0],new_coord[1]]
+            elif isReflection > 0:
+                new_coord = [new_coord[0],new_coord[1]]
+            #Now, we want to cast these new coordinates into our array
+            #(row,column)
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*(new_coord[1]+norm_dir/1.5)/(R*1.5))+height//2]
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*new_coord[1]/(R*1.5))+height//2] #(phi,eta) and the leading subjet at the origin
+#             indxs = [math.floor(height*new_coord[1]/(R*1.5))+height//2,math.floor(width*new_coord[0]/(R*1.5))+width//2] #(eta,phi) and the leading subjet at the origin
+            indxs = [math.floor(height*new_coord[1]/(R*1))+height//2,math.floor(width*new_coord[0]/(R*1))+width//2] #(eta,phi) and the leading subjet at the origin
 
-#         if indxs[0] >= width or indxs[1] >= height or indxs[0] <= 0 or indxs[1] <= 0:
-#             continue
+        if indxs[0] >= width or indxs[1] >= height or indxs[0] <= 0 or indxs[1] <= 0:
+            continue
             
-#         phi_index = int(indxs[0]); eta_index = int(indxs[1])
+        phi_index = int(indxs[0]); eta_index = int(indxs[1])
 
-#         #finally, let's fill
-#         if constituent.Charge != 0:
-#             image_0[phi_index,eta_index] = image_0[phi_index,eta_index] + constituent.pt
-#             image_2[phi_index,eta_index] = image_2[phi_index,eta_index] + 1
+        #finally, let's fill
+        if constituent.Charge != 0:
+            image_0[phi_index,eta_index] = image_0[phi_index,eta_index] + constituent.pt
+            image_2[phi_index,eta_index] = image_2[phi_index,eta_index] + 1
 
-#         elif constituent.Charge == 0:
-#             image_1[phi_index,eta_index] = image_1[phi_index,eta_index] + constituent.pt
+        elif constituent.Charge == 0:
+            image_1[phi_index,eta_index] = image_1[phi_index,eta_index] + constituent.pt
 
             
-#     image_0 = np.divide(image_0,np.sum(image_0)) #Charged pt 
-#     image_1 = np.divide(image_1,np.sum(image_1)) #Neutral pt 
-#     image_2 = np.divide(image_2,np.sum(image_2)) #Charged multiplicity
-#     jetimage_list.append(np.array([image_0,image_1,image_2]))
+    image_0 = np.divide(image_0,np.sum(image_0)) #Charged pt 
+    image_1 = np.divide(image_1,np.sum(image_1)) #Neutral pt 
+    image_2 = np.divide(image_2,np.sum(image_2)) #Charged multiplicity
+    jetimage_list.append(np.array([image_0,image_1,image_2]))
     
     
-# jetimage_list = np.array(jetimage_list)
+jetimage_list = np.array(jetimage_list)
 
 
-# print("There are {} jet images.".format(len(jetimage_list)))
-# print("\n")
-# np.savez(imagespath +str(PRO)+"_"+str(GEN)+"_"+str(SHO)+"_"+str(file_number)+"_untrimmed.npz", 
-#            jet_images = jetimage_list)
+print("There are {} jet images.".format(len(jetimage_list)))
+print("\n")
+np.savez(imagespath + str(GEN) + "_" + str(SHO) + "_" + str(PRO) +"_"+str(file_number)+"_untrimmed_leading.npz", 
+           jet_images = jetimage_list)
 
-# ticks_2 = time.time()
-# totaltime =  ticks_2 - ticks_1
-# print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
+ticks_2 = time.time()
+totaltime =  ticks_2 - ticks_1
+print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
+print("\n")  
 
+
+
+###################################################################################
+print("Make sub-Leading Jet Images")
+print("\n")    
+print(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()))
+time.sleep(1)
+ticks_1 = time.time()
+
+jetimage_list = []
+
+for N in tqdm(range(len(process_list_clustered))):
+    
+#     """
+#     Trigger
+#     """
+#     if ET(process_list_clustered[N][0]) < 420 or process_list_clustered[N][0].mass < 35:
+#         continue
+        
+    """
+    >= 2 jets
+    """
+    if len(process_list_clustered[N]) < 2: # at least two jets in this event.
+        continue
+
+    jet_1_untrimmed = process_list_clustered[N][0] #leading jet's information
+    jet_2_untrimmed = process_list_clustered[N][1] #subleading jet's information
+    
+#     """
+#     Basic Selection
+#     """
+
+#     if (jet_1_untrimmed.pt < 450) or (jet_2_untrimmed.pt < 250) :
+#         continue
+
+#     if (abs(jet_1_untrimmed.eta) >= 2) or (jet_1_untrimmed.mass <= 50) :
+#         continue
+
+#     if (abs(jet_2_untrimmed.eta) >= 2) or (jet_2_untrimmed.mass <= 50) :
+#         continue
+
+
+#     """
+#     |\Delta\eta| < 1.3
+#     """        
+#     if (abs(jet_1_untrimmed.eta - jet_2_untrimmed.eta) > 1.3) :
+#         continue
+        
+#     """
+#     M(jj) > 700 GeV 
+#     """    
+#     if MJJ(jet_1_untrimmed,jet_2_untrimmed) < 700:
+#         continue
+        
+        
+
+#     jet = process_list_clustered[N][0] #leading jet's information
+    jet = jet_2_untrimmed
+    
+
+    width,height = 40,40
+    image_0 = np.zeros((width,height)) #Charged pt 
+    image_1 = np.zeros((width,height)) #Neutral pt
+    image_2 = np.zeros((width,height)) #Charged multiplicity
+    isReflection = 1
+    x_hat = np.array([1,0]) 
+    y_hat = np.array([0,1])
+    
+    subjets = pyjet.cluster(jet.constituents_array(), R=0.2, p=-1)
+    subjet_array = subjets.inclusive_jets()
+    
+        
+    if len(subjet_array) > 1:
+            #First, let's find the direction of the second-hardest jet relative to the first-hardest jet
+#             phi_dir = -(dphi(subjet_array[1].phi,subjet_array[0].phi))
+#             eta_dir = -(subjet_array[1].eta - subjet_array[0].eta)
+            phi_dir = -(dphi(subjet_array[1].phi,jet.phi))
+            eta_dir = -(subjet_array[1].eta - jet.eta)
+            #Norm difference:
+            norm_dir = np.linalg.norm([phi_dir,eta_dir])
+            #This is now the y-hat direction. so we can actually find the unit vector:
+            y_hat = np.divide([phi_dir,eta_dir],np.linalg.norm([phi_dir,eta_dir]))
+            #and we can find the x_hat direction as well
+            x_hat = np.array([y_hat[1],-y_hat[0]]) 
+    
+    if len(subjet_array) > 2:
+#         phi_dir_3 = -(dphi(subjet_array[2].phi,subjet_array[0].phi))
+#         eta_dir_3 = -(subjet_array[2].eta - subjet_array[0].eta)
+        phi_dir_3 = -(dphi(subjet_array[2].phi,jet.phi))
+        eta_dir_3 = -(subjet_array[2].eta - jet.eta)
+
+        isReflection = np.cross(np.array([phi_dir,eta_dir,0]),np.array([phi_dir_3,eta_dir_3,0]))[2]
+        
+
+    R = 1.0
+    for constituent in jet:
+        
+#         new_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+#         indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2, math.floor(height*(new_coord[1])/(R*1.5))+height//2]
+
+
+        if (len(subjet_array) == 1):
+            #In the case that the reclustering only found one hard jet (that seems kind of bad, but hey)
+            #no_two = no_two+1
+#             new_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
+            new_coord = [dphi(constituent.phi, jet.phi),constituent.eta-jet.eta]
+            indxs = [math.floor(width*new_coord[0]/(R*1))+width//2, math.floor(height*(new_coord[1])/(R*1))+height//2]
+            
+        else:
+            #Now, we want to express an incoming particle in this new basis:
+#             part_coord = [dphi(constituent.phi,subjet_array[0].phi),constituent.eta-subjet_array[0].eta]
+            part_coord = [dphi(constituent.phi,jet.phi),constituent.eta-jet.eta]
+            new_coord = np.dot(np.array([x_hat,y_hat]),part_coord)
+            
+            #put third-leading subjet on the right-hand side
+            if isReflection < 0: 
+                new_coord = [-new_coord[0],new_coord[1]]
+            elif isReflection > 0:
+                new_coord = [new_coord[0],new_coord[1]]
+            #Now, we want to cast these new coordinates into our array
+            #(row,column)
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*(new_coord[1]+norm_dir/1.5)/(R*1.5))+height//2]
+#             indxs = [math.floor(width*new_coord[0]/(R*1.5))+width//2,math.floor(height*new_coord[1]/(R*1.5))+height//2] #(phi,eta) and the leading subjet at the origin
+#             indxs = [math.floor(height*new_coord[1]/(R*1.5))+height//2,math.floor(width*new_coord[0]/(R*1.5))+width//2] #(eta,phi) and the leading subjet at the origin
+            indxs = [math.floor(height*new_coord[1]/(R*1))+height//2,math.floor(width*new_coord[0]/(R*1))+width//2] #(eta,phi) and the leading subjet at the origin
+
+        if indxs[0] >= width or indxs[1] >= height or indxs[0] <= 0 or indxs[1] <= 0:
+            continue
+            
+        phi_index = int(indxs[0]); eta_index = int(indxs[1])
+
+        #finally, let's fill
+        if constituent.Charge != 0:
+            image_0[phi_index,eta_index] = image_0[phi_index,eta_index] + constituent.pt
+            image_2[phi_index,eta_index] = image_2[phi_index,eta_index] + 1
+
+        elif constituent.Charge == 0:
+            image_1[phi_index,eta_index] = image_1[phi_index,eta_index] + constituent.pt
+
+            
+    image_0 = np.divide(image_0,np.sum(image_0)) #Charged pt 
+    image_1 = np.divide(image_1,np.sum(image_1)) #Neutral pt 
+    image_2 = np.divide(image_2,np.sum(image_2)) #Charged multiplicity
+    jetimage_list.append(np.array([image_0,image_1,image_2]))
+    
+    
+jetimage_list = np.array(jetimage_list)
+
+
+print("There are {} jet images.".format(len(jetimage_list)))
+print("\n")
+np.savez(imagespath + str(GEN) + "_" + str(SHO) + "_" + str(PRO) + "_"+str(file_number)+"_untrimmed_subleading.npz", 
+           jet_images = jetimage_list)
+
+ticks_2 = time.time()
+totaltime =  ticks_2 - ticks_1
+print("\033[3;33mTime Cost : {:.4f} min\033[0;m".format(totaltime/60.))
 
 
